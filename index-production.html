@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bardon Clean - Business Management Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { width: 100%; height: 100%; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: #faf8f3; 
+      color: #1a1a1a;
+    }
+    .app-container { min-height: 100vh; display: flex; flex-direction: column; }
+    .nav-bar { background: white; border-bottom: 1px solid #e0d5c8; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .nav-bar h1 { font-size: 1.5rem; font-weight: bold; }
+    .nav-buttons { display: flex; gap: 0.5rem; }
+    .nav-btn { background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; font-weight: 500; }
+    .nav-btn.active { background: #d97706; color: white; }
+    .nav-btn:hover { background: #f0f0f0; }
+    .nav-btn.active:hover { background: #b45309; }
+    .content { flex: 1; padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #d97706; }
+    .stat-label { color: #666; font-size: 0.875rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem; }
+    .stat-value { font-size: 1.875rem; font-weight: bold; }
+    .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+    .card h2 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    input, textarea, select { padding: 0.75rem; border: 1px solid #e0d5c8; border-radius: 4px; font-size: 1rem; font-family: inherit; width: 100%; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #d97706; background: #fffbf5; }
+    textarea { resize: vertical; min-height: 100px; }
+    .button-group { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    button { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .btn-primary { background: #d97706; color: white; }
+    .btn-primary:hover { background: #b45309; }
+    .btn-secondary { background: #2563eb; color: white; }
+    .btn-secondary:hover { background: #1d4ed8; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .list-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .list-item { background: #f9f5f0; border: 1px solid #e0d5c8; padding: 1rem; border-radius: 4px; }
+    .list-item h3 { margin-bottom: 0.5rem; font-weight: 600; }
+    .list-item p { font-size: 0.875rem; color: #666; margin-bottom: 0.25rem; }
+    .list-item-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+    .list-item-actions button { padding: 0.5rem 1rem; font-size: 0.875rem; }
+    .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-approved { background: #dcfce7; color: #166534; }
+    .badge-completed { background: #d1fae5; color: #065f46; }
+    .badge-paid { background: #d1f3f3; color: #0e5764; }
+    .form-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #e0d5c8; }
+    .form-section:last-child { border-bottom: none; }
+    .form-section h3 { font-size: 1.125rem; margin-bottom: 1rem; font-weight: 600; }
+    .line-item { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: center; padding: 0.75rem; background: #f9f5f0; border-radius: 4px; margin-bottom: 0.5rem; }
+    .line-item input { margin: 0; }
+    .pricing-summary { background: #fef5f0; padding: 1.5rem; border-radius: 4px; margin-top: 1rem; }
+    .pricing-row { display: flex; justify-content: space-between; margin-bottom: 0.75rem; }
+    .pricing-row strong { font-weight: 600; }
+    .pricing-total { display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; border-top: 2px solid #e0d5c8; padding-top: 0.75rem; }
+    .empty-state { text-align: center; padding: 3rem; color: #999; }
+    .success-message { background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+    .error-message { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .table th { background: #f9f5f0; padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 2px solid #e0d5c8; }
+    .table td { padding: 0.75rem; border-bottom: 1px solid #e0d5c8; }
+    .table tr:hover { background: #fef5f0; }
+    @media (max-width: 768px) {
+      .nav-buttons { flex-direction: column; }
+      .form-row { grid-template-columns: 1fr; }
+      .list-container { grid-template-columns: 1fr; }
+      .line-item { grid-template-columns: 1fr; }
+      .content { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+
+  <script>
+    const React = window.React;
+    const ReactDOM = window.ReactDOM;
+    const { useState, useEffect } = React;
+
+    function BardonCleanPlatform() {
+      const [view, setView] = useState('dashboard');
+      const [data, setData] = useState({
+        customers: [],
+        quotes: [],
+        jobs: [],
+        payments: [],
+        messages: []
+      });
+      const [message, setMessage] = useState({ type: '', text: '' });
+
+      // Load data from storage
+      useEffect(() => {
+        const stored = localStorage.getItem('bardon-data');
+        if (stored) {
+          try {
+            setData(JSON.parse(stored));
+          } catch (e) {
+            console.log('Fresh start');
+          }
+        }
+      }, []);
+
+      // Save data to storage
+      useEffect(() => {
+        localStorage.setItem('bardon-data', JSON.stringify(data));
+      }, [data]);
+
+      const showMessage = (type, text) => {
+        setMessage({ type, text });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      };
+
+      // ===== CUSTOMERS =====
+      const addCustomer = (formData) => {
+        const newCustomer = {
+          id: Date.now(),
+          ...formData,
+          dateAdded: new Date().toLocaleDateString(),
+          totalSpent: 0,
+          jobCount: 0,
+          referrals: 0
+        };
+        setData({ ...data, customers: [newCustomer, ...data.customers] });
+        showMessage('success', 'Customer added!');
+        return newCustomer;
+      };
+
+      // ===== QUOTES =====
+      const createQuote = (quoteData) => {
+        const newQuote = {
+          id: Date.now(),
+          ...quoteData,
+          status: 'draft',
+          createdDate: new Date().toLocaleDateString()
+        };
+        setData({ ...data, quotes: [newQuote, ...data.quotes] });
+        showMessage('success', 'Quote created!');
+        return newQuote;
+      };
+
+      const sendQuote = (quoteId) => {
+        setData({
+          ...data,
+          quotes: data.quotes.map(q =>
+            q.id === quoteId
+              ? { ...q, status: 'sent', sentDate: new Date().toLocaleDateString() }
+              : q
+          )
+        });
+        showMessage('success', 'Quote sent to customer!');
+      };
+
+      const approveQuote = (quoteId) => {
+        const quote = data.quotes.find(q => q.id === quoteId);
+        const depositAmount = quote.total * 0.5;
+        setData({
+          ...data,
+          quotes: data.quotes.map(q =>
+            q.id === quoteId
+              ? { ...q, status: 'approved', approvedDate: new Date().toLocaleDateString() }
+              : q
+          ),
+          payments: [...data.payments, {
+            id: Date.now(),
+            quoteId: quoteId,
+            customerId: quote.customerId,
+            amount: depositAmount,
+            type: 'deposit',
+            status: 'pending',
+            dueDate: new Date().toLocaleDateString()
+          }]
+        });
+        showMessage('success', 'Quote approved! Deposit invoice created.');
+      };
+
+      const markPaymentPaid = (paymentId) => {
+        setData({
+          ...data,
+          payments: data.payments.map(p =>
+            p.id === paymentId
+              ? { ...p, status: 'paid', paidDate: new Date().toLocaleDateString() }
+              : p
+          )
+        });
+        showMessage('success', 'Payment recorded!');
+      };
+
+      // ===== JOBS =====
+      const scheduleJob = (jobData) => {
+        const newJob = {
+          id: Date.now(),
+          ...jobData,
+          status: 'scheduled',
+          createdDate: new Date().toLocaleDateString()
+        };
+        setData({ ...data, jobs: [newJob, ...data.jobs] });
+        showMessage('success', 'Job scheduled!');
+      };
+
+      const completeJob = (jobId) => {
+        const job = data.jobs.find(j => j.id === jobId);
+        const quote = data.quotes.find(q => q.id === job.quoteId);
+        setData({
+          ...data,
+          jobs: data.jobs.map(j =>
+            j.id === jobId
+              ? { ...j, status: 'completed', completedDate: new Date().toLocaleDateString() }
+              : j
+          ),
+          payments: [...data.payments, {
+            id: Date.now(),
+            jobId: jobId,
+            quoteId: job.quoteId,
+            customerId: job.customerId,
+            amount: quote.total * 0.5,
+            type: 'final',
+            status: 'pending',
+            dueDate: new Date().toLocaleDateString()
+          }]
+        });
+        showMessage('success', 'Job completed! Final invoice created.');
+      };
+
+      // ===== STATS =====
+      const stats = {
+        totalRevenue: data.payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
+        outstanding: data.payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
+        customers: data.customers.length,
+        quotes: data.quotes.filter(q => q.status === 'sent').length,
+        jobs: data.jobs.filter(j => j.status === 'completed').length
+      };
+
+      // ===== DASHBOARD =====
+      if (view === 'dashboard') {
+        return React.createElement('div', { className: 'app-container' },
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('h1', null, '🧹 Bardon Clean'),
+            React.createElement('div', { className: 'nav-buttons' },
+              React.createElement('button', { className: 'nav-btn active' }, 'Dashboard'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('customers') }, 'Customers'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('quotes') }, 'Quotes'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('jobs') }, 'Jobs'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('payments') }, 'Payments')
+            )
+          ),
+          React.createElement('div', { className: 'content' },
+            React.createElement('h2', { style: { marginBottom: '2rem' } }, 'Dashboard'),
+            React.createElement('div', { className: 'stats-grid' },
+              React.createElement('div', { className: 'stat-card' },
+                React.createElement('div', { className: 'stat-label' }, '💰 Revenue'),
+                React.createElement('div', { className: 'stat-value' }, '$' + stats.totalRevenue.toFixed(0))
+              ),
+              React.createElement('div', { className: 'stat-card', style: { borderLeftColor: '#dc2626' } },
+                React.createElement('div', { className: 'stat-label' }, '⏳ Outstanding'),
+                React.createElement('div', { className: 'stat-value' }, '$' + stats.outstanding.toFixed(0))
+              ),
+              React.createElement('div', { className: 'stat-card', style: { borderLeftColor: '#2563eb' } },
+                React.createElement('div', { className: 'stat-label' }, '👥 Customers'),
+                React.createElement('div', { className: 'stat-value' }, stats.customers)
+              ),
+              React.createElement('div', { className: 'stat-card', style: { borderLeftColor: '#16a34a' } },
+                React.createElement('div', { className: 'stat-label' }, '📋 Pending Quotes'),
+                React.createElement('div', { className: 'stat-value' }, stats.quotes)
+              ),
+              React.createElement('div', { className: 'stat-card', style: { borderLeftColor: '#9333ea' } },
+                React.createElement('div', { className: 'stat-label' }, '✓ Jobs Done'),
+                React.createElement('div', { className: 'stat-value' }, stats.jobs)
+              )
+            ),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'Quick Start'),
+              React.createElement('p', { style: { color: '#666', marginBottom: '1rem' } }, 'Welcome to Bardon Clean Platform! Start by:'),
+              React.createElement('div', { className: 'button-group' },
+                React.createElement('button', { className: 'btn-primary', onClick: () => setView('customers') }, '1. Add Customers'),
+                React.createElement('button', { className: 'btn-secondary', onClick: () => setView('quotes') }, '2. Create Quotes'),
+                React.createElement('button', { className: 'btn-success', onClick: () => setView('jobs') }, '3. Schedule Jobs'),
+                React.createElement('button', { className: 'btn-secondary', onClick: () => setView('payments') }, '4. Track Payments')
+              )
+            )
+          )
+        );
+      }
+
+      // ===== CUSTOMERS VIEW =====
+      if (view === 'customers') {
+        const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', serviceType: '' });
+
+        const handleAddCustomer = () => {
+          if (!form.name || !form.phone) {
+            showMessage('error', 'Name and phone are required');
+            return;
+          }
+          addCustomer(form);
+          setForm({ name: '', email: '', phone: '', address: '', serviceType: '' });
+        };
+
+        return React.createElement('div', { className: 'app-container' },
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('h1', null, '🧹 Bardon Clean'),
+            React.createElement('div', { className: 'nav-buttons' },
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('dashboard') }, 'Dashboard'),
+              React.createElement('button', { className: 'nav-btn active' }, 'Customers'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('quotes') }, 'Quotes'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('jobs') }, 'Jobs'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('payments') }, 'Payments')
+            )
+          ),
+          React.createElement('div', { className: 'content' },
+            message.text && React.createElement('div', { className: message.type === 'success' ? 'success-message' : 'error-message' }, message.text),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'Add New Customer'),
+              React.createElement('div', { className: 'form-row' },
+                React.createElement('input', { type: 'text', placeholder: 'Customer Name *', value: form.name, onChange: (e) => setForm({...form, name: e.target.value}) }),
+                React.createElement('input', { type: 'email', placeholder: 'Email', value: form.email, onChange: (e) => setForm({...form, email: e.target.value}) })
+              ),
+              React.createElement('div', { className: 'form-row' },
+                React.createElement('input', { type: 'tel', placeholder: 'Phone *', value: form.phone, onChange: (e) => setForm({...form, phone: e.target.value}) }),
+                React.createElement('input', { type: 'text', placeholder: 'Address', value: form.address, onChange: (e) => setForm({...form, address: e.target.value}) })
+              ),
+              React.createElement('div', { className: 'button-group' },
+                React.createElement('button', { className: 'btn-primary', onClick: handleAddCustomer }, 'Add Customer')
+              )
+            ),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'All Customers (' + data.customers.length + ')'),
+              data.customers.length > 0 ?
+                React.createElement('div', { className: 'list-container' },
+                  data.customers.map(c =>
+                    React.createElement('div', { key: c.id, className: 'list-item' },
+                      React.createElement('h3', null, c.name),
+                      React.createElement('p', null, '📞 ' + c.phone),
+                      c.email && React.createElement('p', null, '📧 ' + c.email),
+                      c.address && React.createElement('p', null, '📍 ' + c.address),
+                      React.createElement('p', { style: { marginTop: '0.5rem', color: '#999', fontSize: '0.75rem' } }, 'Added ' + c.dateAdded)
+                    )
+                  )
+                ) :
+                React.createElement('div', { className: 'empty-state' }, 'No customers yet. Add one above!')
+            )
+          )
+        );
+      }
+
+      // ===== QUOTES VIEW =====
+      if (view === 'quotes') {
+        const [form, setForm] = useState({
+          customerId: '',
+          serviceType: 'bond',
+          description: '',
+          hours: 4,
+          hourlyRate: 100,
+          addOns: []
+        });
+        const [addOnForm, setAddOnForm] = useState({ name: '', price: 0 });
+
+        const subtotal = (parseFloat(form.hours) || 0) * form.hourlyRate + form.addOns.reduce((sum, ao) => sum + ao.price, 0);
+        const gst = subtotal * 0.1;
+        const total = subtotal + gst;
+
+        const handleCreateQuote = () => {
+          if (!form.customerId || !form.serviceType) {
+            showMessage('error', 'Please select customer and service type');
+            return;
+          }
+          const customer = data.customers.find(c => c.id == form.customerId);
+          createQuote({
+            customerId: form.customerId,
+            customerName: customer.name,
+            serviceType: form.serviceType,
+            description: form.description,
+            hours: form.hours,
+            hourlyRate: form.hourlyRate,
+            addOns: form.addOns,
+            subtotal: subtotal,
+            gst: gst,
+            total: total
+          });
+          setForm({ customerId: '', serviceType: 'bond', description: '', hours: 4, hourlyRate: 100, addOns: [] });
+        };
+
+        const handleAddAddOn = () => {
+          if (!addOnForm.name || !addOnForm.price) return;
+          setForm({
+            ...form,
+            addOns: [...form.addOns, { id: Date.now(), ...addOnForm }]
+          });
+          setAddOnForm({ name: '', price: 0 });
+        };
+
+        return React.createElement('div', { className: 'app-container' },
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('h1', null, '🧹 Bardon Clean'),
+            React.createElement('div', { className: 'nav-buttons' },
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('dashboard') }, 'Dashboard'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('customers') }, 'Customers'),
+              React.createElement('button', { className: 'nav-btn active' }, 'Quotes'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('jobs') }, 'Jobs'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('payments') }, 'Payments')
+            )
+          ),
+          React.createElement('div', { className: 'content' },
+            message.text && React.createElement('div', { className: message.type === 'success' ? 'success-message' : 'error-message' }, message.text),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'Create New Quote'),
+              React.createElement('div', { className: 'form-section' },
+                React.createElement('h3', null, 'Customer & Service'),
+                React.createElement('div', { className: 'form-row' },
+                  React.createElement('select', { value: form.customerId, onChange: (e) => setForm({...form, customerId: e.target.value}) },
+                    React.createElement('option', { value: '' }, '-- Select Customer --'),
+                    data.customers.map(c => React.createElement('option', { key: c.id, value: c.id }, c.name + ' (' + c.phone + ')'))
+                  ),
+                  React.createElement('select', { value: form.serviceType, onChange: (e) => setForm({...form, serviceType: e.target.value}) },
+                    React.createElement('option', { value: 'bond' }, 'Bond Clean'),
+                    React.createElement('option', { value: 'presale' }, 'Pre-Sale Clean'),
+                    React.createElement('option', { value: 'deep' }, 'Deep Clean'),
+                    React.createElement('option', { value: 'regular' }, 'Regular Clean')
+                  )
+                ),
+                React.createElement('textarea', { placeholder: 'What is included in this service?', value: form.description, onChange: (e) => setForm({...form, description: e.target.value}) })
+              ),
+              React.createElement('div', { className: 'form-section' },
+                React.createElement('h3', null, 'Pricing'),
+                React.createElement('div', { className: 'form-row' },
+                  React.createElement('input', { type: 'number', placeholder: 'Hours', value: form.hours, onChange: (e) => setForm({...form, hours: parseFloat(e.target.value)}) }),
+                  React.createElement('input', { type: 'number', placeholder: 'Hourly Rate ($)', value: form.hourlyRate, onChange: (e) => setForm({...form, hourlyRate: parseFloat(e.target.value)}) })
+                ),
+                React.createElement('div', { style: { marginBottom: '1rem' } },
+                  React.createElement('h4', null, 'Additional Items'),
+                  form.addOns.length > 0 && React.createElement('div', null,
+                    form.addOns.map(ao =>
+                      React.createElement('div', { key: ao.id, style: { padding: '0.5rem', background: '#f9f5f0', marginBottom: '0.5rem', borderRadius: '4px', display: 'flex', justifyContent: 'space-between' } },
+                        React.createElement('span', null, ao.name),
+                        React.createElement('span', null, '+$' + ao.price.toFixed(2)),
+                        React.createElement('button', { style: { background: 'none', border: 'none', color: '#999', cursor: 'pointer', padding: 0 }, onClick: () => setForm({...form, addOns: form.addOns.filter(a => a.id !== ao.id)}) }, '×')
+                      )
+                    )
+                  ),
+                  React.createElement('div', { style: { display: 'flex', gap: '0.5rem' } },
+                    React.createElement('input', { type: 'text', placeholder: 'Add-on name', value: addOnForm.name, onChange: (e) => setAddOnForm({...addOnForm, name: e.target.value}), style: { flex: 1 } }),
+                    React.createElement('input', { type: 'number', placeholder: 'Price', value: addOnForm.price, onChange: (e) => setAddOnForm({...addOnForm, price: parseFloat(e.target.value)}), style: { flex: 1 } }),
+                    React.createElement('button', { className: 'btn-secondary', onClick: handleAddAddOn }, 'Add')
+                  )
+                )
+              ),
+              React.createElement('div', { className: 'pricing-summary' },
+                React.createElement('div', { className: 'pricing-row' },
+                  React.createElement('span', null, 'Subtotal'),
+                  React.createElement('span', null, '$' + subtotal.toFixed(2))
+                ),
+                React.createElement('div', { className: 'pricing-row' },
+                  React.createElement('span', null, 'GST (10%)'),
+                  React.createElement('span', null, '$' + gst.toFixed(2))
+                ),
+                React.createElement('div', { className: 'pricing-total' },
+                  React.createElement('span', null, 'TOTAL'),
+                  React.createElement('span', null, '$' + total.toFixed(2))
+                )
+              ),
+              React.createElement('div', { className: 'button-group' },
+                React.createElement('button', { className: 'btn-primary', onClick: handleCreateQuote }, 'Create Quote')
+              )
+            ),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'Recent Quotes'),
+              data.quotes.length > 0 ?
+                React.createElement('table', { className: 'table' },
+                  React.createElement('thead', null,
+                    React.createElement('tr', null,
+                      React.createElement('th', null, 'Customer'),
+                      React.createElement('th', null, 'Service'),
+                      React.createElement('th', null, 'Amount'),
+                      React.createElement('th', null, 'Status'),
+                      React.createElement('th', null, 'Actions')
+                    )
+                  ),
+                  React.createElement('tbody', null,
+                    data.quotes.slice(0, 10).map(q =>
+                      React.createElement('tr', { key: q.id },
+                        React.createElement('td', null, q.customerName),
+                        React.createElement('td', null, q.serviceType),
+                        React.createElement('td', null, '$' + q.total.toFixed(2)),
+                        React.createElement('td', null, React.createElement('span', { className: 'badge badge-' + (q.status === 'approved' ? 'approved' : q.status === 'sent' ? 'pending' : 'pending') }, q.status)),
+                        React.createElement('td', null,
+                          q.status === 'draft' && React.createElement('button', { className: 'btn-secondary', style: { padding: '0.5rem 1rem', fontSize: '0.875rem' }, onClick: () => sendQuote(q.id) }, 'Send'),
+                          q.status === 'sent' && React.createElement('button', { className: 'btn-success', style: { padding: '0.5rem 1rem', fontSize: '0.875rem' }, onClick: () => approveQuote(q.id) }, 'Approve')
+                        )
+                      )
+                    )
+                  )
+                ) :
+                React.createElement('div', { className: 'empty-state' }, 'No quotes yet. Create one above!')
+            )
+          )
+        );
+      }
+
+      // ===== JOBS VIEW =====
+      if (view === 'jobs') {
+        const [form, setForm] = useState({
+          quoteId: '',
+          scheduledDate: '',
+          notes: ''
+        });
+
+        const handleScheduleJob = () => {
+          if (!form.quoteId || !form.scheduledDate) {
+            showMessage('error', 'Please select quote and date');
+            return;
+          }
+          const quote = data.quotes.find(q => q.id == form.quoteId);
+          scheduleJob({
+            quoteId: form.quoteId,
+            customerId: quote.customerId,
+            customerName: quote.customerName,
+            serviceType: quote.serviceType,
+            scheduledDate: form.scheduledDate,
+            notes: form.notes
+          });
+          setForm({ quoteId: '', scheduledDate: '', notes: '' });
+        };
+
+        const approvedQuotes = data.quotes.filter(q => q.status === 'approved');
+
+        return React.createElement('div', { className: 'app-container' },
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('h1', null, '🧹 Bardon Clean'),
+            React.createElement('div', { className: 'nav-buttons' },
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('dashboard') }, 'Dashboard'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('customers') }, 'Customers'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('quotes') }, 'Quotes'),
+              React.createElement('button', { className: 'nav-btn active' }, 'Jobs'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('payments') }, 'Payments')
+            )
+          ),
+          React.createElement('div', { className: 'content' },
+            message.text && React.createElement('div', { className: message.type === 'success' ? 'success-message' : 'error-message' }, message.text),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'Schedule Job'),
+              React.createElement('div', { className: 'form-row' },
+                React.createElement('select', { value: form.quoteId, onChange: (e) => setForm({...form, quoteId: e.target.value}) },
+                  React.createElement('option', { value: '' }, '-- Select Approved Quote --'),
+                  approvedQuotes.map(q => React.createElement('option', { key: q.id, value: q.id }, q.customerName + ' - ' + q.serviceType))
+                ),
+                React.createElement('input', { type: 'date', value: form.scheduledDate, onChange: (e) => setForm({...form, scheduledDate: e.target.value}) })
+              ),
+              React.createElement('textarea', { placeholder: 'Notes', value: form.notes, onChange: (e) => setForm({...form, notes: e.target.value}) }),
+              React.createElement('div', { className: 'button-group' },
+                React.createElement('button', { className: 'btn-primary', onClick: handleScheduleJob }, 'Schedule Job')
+              )
+            ),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'Jobs'),
+              data.jobs.length > 0 ?
+                React.createElement('table', { className: 'table' },
+                  React.createElement('thead', null,
+                    React.createElement('tr', null,
+                      React.createElement('th', null, 'Customer'),
+                      React.createElement('th', null, 'Service'),
+                      React.createElement('th', null, 'Scheduled Date'),
+                      React.createElement('th', null, 'Status'),
+                      React.createElement('th', null, 'Actions')
+                    )
+                  ),
+                  React.createElement('tbody', null,
+                    data.jobs.map(j =>
+                      React.createElement('tr', { key: j.id },
+                        React.createElement('td', null, j.customerName),
+                        React.createElement('td', null, j.serviceType),
+                        React.createElement('td', null, j.scheduledDate),
+                        React.createElement('td', null, React.createElement('span', { className: 'badge badge-' + (j.status === 'completed' ? 'completed' : 'pending') }, j.status)),
+                        React.createElement('td', null,
+                          j.status === 'scheduled' && React.createElement('button', { className: 'btn-success', style: { padding: '0.5rem 1rem', fontSize: '0.875rem' }, onClick: () => completeJob(j.id) }, 'Complete')
+                        )
+                      )
+                    )
+                  )
+                ) :
+                React.createElement('div', { className: 'empty-state' }, 'No jobs yet. Schedule one above!')
+            )
+          )
+        );
+      }
+
+      // ===== PAYMENTS VIEW =====
+      if (view === 'payments') {
+        return React.createElement('div', { className: 'app-container' },
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('h1', null, '🧹 Bardon Clean'),
+            React.createElement('div', { className: 'nav-buttons' },
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('dashboard') }, 'Dashboard'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('customers') }, 'Customers'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('quotes') }, 'Quotes'),
+              React.createElement('button', { className: 'nav-btn', onClick: () => setView('jobs') }, 'Jobs'),
+              React.createElement('button', { className: 'nav-btn active' }, 'Payments')
+            )
+          ),
+          React.createElement('div', { className: 'content' },
+            message.text && React.createElement('div', { className: message.type === 'success' ? 'success-message' : 'error-message' }, message.text),
+            React.createElement('div', { className: 'card' },
+              React.createElement('h2', null, 'Payment Tracking'),
+              data.payments.length > 0 ?
+                React.createElement('table', { className: 'table' },
+                  React.createElement('thead', null,
+                    React.createElement('tr', null,
+                      React.createElement('th', null, 'Type'),
+                      React.createElement('th', null, 'Amount'),
+                      React.createElement('th', null, 'Due Date'),
+                      React.createElement('th', null, 'Status'),
+                      React.createElement('th', null, 'Actions')
+                    )
+                  ),
+                  React.createElement('tbody', null,
+                    data.payments.map(p =>
+                      React.createElement('tr', { key: p.id },
+                        React.createElement('td', null, p.type === 'deposit' ? 'Deposit (50%)' : 'Final (50%)'),
+                        React.createElement('td', null, '$' + p.amount.toFixed(2)),
+                        React.createElement('td', null, p.dueDate),
+                        React.createElement('td', null, React.createElement('span', { className: 'badge badge-' + (p.status === 'paid' ? 'paid' : 'pending') }, p.status)),
+                        React.createElement('td', null,
+                          p.status === 'pending' && React.createElement('button', { className: 'btn-success', style: { padding: '0.5rem 1rem', fontSize: '0.875rem' }, onClick: () => markPaymentPaid(p.id) }, 'Mark Paid')
+                        )
+                      )
+                    )
+                  )
+                ) :
+                React.createElement('div', { className: 'empty-state' }, 'No payments yet.')
+            )
+          )
+        );
+      }
+
+      return React.createElement('div', null, 'Loading...');
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(BardonCleanPlatform));
+  </script>
+</body>
+</html>
