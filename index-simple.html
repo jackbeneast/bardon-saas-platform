@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bardon Clean - Business Management Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { width: 100%; height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #faf8f3; color: #1a1a1a; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .header { background: white; padding: 1.5rem; border-bottom: 1px solid #e0d5c8; margin-bottom: 2rem; }
+    .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #d97706; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .stat-card p { color: #666; font-size: 0.875rem; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .stat-card .value { font-size: 2rem; font-weight: bold; }
+    .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    button { padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+    .btn-primary { background: #d97706; color: white; }
+    .btn-primary:hover { background: #b45309; }
+    .btn-secondary { background: #2563eb; color: white; }
+    .btn-secondary:hover { background: #1d4ed8; }
+    .btn-tertiary { background: #9333ea; color: white; }
+    .btn-tertiary:hover { background: #7e22ce; }
+    .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #16a34a; margin-bottom: 2rem; }
+    .card h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #e0d5c8; border-radius: 6px; font-size: 1rem; font-family: inherit; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #d97706; }
+    .success-message { background: #fef3c7; border: 1px solid #fcd34d; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; color: #92400e; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+    .customer-item { background: #f3e8ff; padding: 1rem; border-radius: 6px; border: 1px solid #e9d5ff; }
+    .customer-item h3 { margin-bottom: 0.5rem; font-weight: 600; }
+    .customer-item p { font-size: 0.875rem; color: #666; margin-bottom: 0.25rem; }
+    .loading { text-align: center; padding: 4rem; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="loading">Loading Bardon Clean Platform...</div>
+  </div>
+
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    function BardonSaaS() {
+      const [view, setView] = React.useState('dashboard');
+      const [data, setData] = React.useState({
+        customers: [],
+        quotes: [],
+        jobs: [],
+        reviews: [],
+        payments: [],
+        messages: []
+      });
+
+      React.useEffect(() => {
+        const loadData = async () => {
+          try {
+            const result = await window.storage?.get('bardon-saas-data');
+            if (result?.value) {
+              setData(JSON.parse(result.value));
+            }
+          } catch (error) {
+            console.log('Starting fresh');
+          }
+        };
+        loadData();
+      }, []);
+
+      React.useEffect(() => {
+        const saveData = async () => {
+          try {
+            await window.storage?.set('bardon-saas-data', JSON.stringify(data));
+          } catch (error) {
+            console.log('Could not save');
+          }
+        };
+        if (data.customers.length > 0 || data.quotes.length > 0 || data.jobs.length > 0) {
+          saveData();
+        }
+      }, [data]);
+
+      const addCustomer = (customer) => {
+        const newCustomer = {
+          id: Date.now(),
+          dateAdded: new Date().toLocaleDateString(),
+          ...customer
+        };
+        setData({ ...data, customers: [newCustomer, ...data.customers] });
+        return newCustomer;
+      };
+
+      const stats = {
+        totalRevenue: data.payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
+        outstandingPayments: data.payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
+        totalCustomers: data.customers.length,
+        jobsCompleted: data.jobs.filter(j => j.status === 'completed').length,
+        reviewsReceived: data.reviews.length
+      };
+
+      // DASHBOARD
+      if (view === 'dashboard') {
+        return (
+          <div style={{ background: 'linear-gradient(to bottom right, #faf8f3, white, #fef5f0)', minHeight: '100vh' }}>
+            <div className="header">
+              <h1>🧹 Bardon Clean</h1>
+              <p>Business Management Platform</p>
+            </div>
+
+            <div className="container">
+              <div className="stats">
+                <div className="stat-card" style={{ borderLeftColor: '#d97706' }}>
+                  <p>💰 Revenue</p>
+                  <div className="value">${stats.totalRevenue.toFixed(0)}</div>
+                </div>
+                <div className="stat-card" style={{ borderLeftColor: '#dc2626' }}>
+                  <p>⏳ Outstanding</p>
+                  <div className="value">${stats.outstandingPayments.toFixed(0)}</div>
+                </div>
+                <div className="stat-card" style={{ borderLeftColor: '#2563eb' }}>
+                  <p>👥 Customers</p>
+                  <div className="value">{stats.totalCustomers}</div>
+                </div>
+                <div className="stat-card" style={{ borderLeftColor: '#16a34a' }}>
+                  <p>⭐ Reviews</p>
+                  <div className="value">{stats.reviewsReceived}</div>
+                </div>
+              </div>
+
+              <div className="actions">
+                <button className="btn-primary" onClick={() => setView('quotes')}>📋 Create Quote</button>
+                <button className="btn-secondary" onClick={() => setView('jobs')}>📅 Schedule Job</button>
+                <button className="btn-tertiary" onClick={() => setView('customers')}>👥 Manage Customers</button>
+              </div>
+
+              <div className="success-message">
+                ✅ Platform is live! Test by creating a quote above. Data saves automatically.
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // QUOTES
+      if (view === 'quotes') {
+        return (
+          <div style={{ background: 'linear-gradient(to bottom right, #faf8f3, white, #fef5f0)', minHeight: '100vh', padding: '2rem' }}>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '1rem', background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '1rem' }}>← Back</button>
+            <div className="container">
+              <h1>📋 Quotes & Proposals</h1>
+              <div className="card" style={{ borderTopColor: '#d97706' }}>
+                <h2>Create New Quote</h2>
+                <p style={{ color: '#666', marginBottom: '1rem' }}>Quote creation form coming soon. Start by adding customers first.</p>
+                <button className="btn-primary" onClick={() => setView('customers')}>Go to Customers</button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // JOBS
+      if (view === 'jobs') {
+        return (
+          <div style={{ background: 'linear-gradient(to bottom right, #faf8f3, white, #fef5f0)', minHeight: '100vh', padding: '2rem' }}>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '1rem', background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '1rem' }}>← Back</button>
+            <div className="container">
+              <h1>📅 Job Management</h1>
+              <div className="card" style={{ borderTopColor: '#2563eb' }}>
+                <h2>Schedule Job</h2>
+                <p style={{ color: '#666' }}>Job scheduling coming soon. Total jobs: {data.jobs.length}</p>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // CUSTOMERS
+      if (view === 'customers') {
+        const [newCustomerForm, setNewCustomerForm] = React.useState({
+          name: '',
+          email: '',
+          phone: '',
+          address: ''
+        });
+
+        const handleAddCustomer = () => {
+          if (!newCustomerForm.name || !newCustomerForm.phone) {
+            alert('Please fill in name and phone');
+            return;
+          }
+          addCustomer(newCustomerForm);
+          setNewCustomerForm({ name: '', email: '', phone: '', address: '' });
+          alert('Customer added!');
+        };
+
+        return (
+          <div style={{ background: 'linear-gradient(to bottom right, #faf8f3, white, #fef5f0)', minHeight: '100vh', padding: '2rem' }}>
+            <button onClick={() => setView('dashboard')} style={{ marginBottom: '1rem', background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '1rem' }}>← Back</button>
+            <div className="container">
+              <h1>👥 Customer Database</h1>
+
+              <div className="card" style={{ borderTopColor: '#9333ea' }}>
+                <h2>Add Customer</h2>
+                <div className="grid-2">
+                  <input type="text" placeholder="Name" value={newCustomerForm.name} onChange={(e) => setNewCustomerForm({...newCustomerForm, name: e.target.value})} />
+                  <input type="email" placeholder="Email" value={newCustomerForm.email} onChange={(e) => setNewCustomerForm({...newCustomerForm, email: e.target.value})} />
+                  <input type="tel" placeholder="Phone" value={newCustomerForm.phone} onChange={(e) => setNewCustomerForm({...newCustomerForm, phone: e.target.value})} />
+                  <input type="text" placeholder="Address" value={newCustomerForm.address} onChange={(e) => setNewCustomerForm({...newCustomerForm, address: e.target.value})} />
+                </div>
+                <button className="btn-tertiary" onClick={handleAddCustomer} style={{ marginTop: '1rem', width: '100%' }}>Add Customer</button>
+              </div>
+
+              <div className="card" style={{ borderTopColor: '#9333ea' }}>
+                <h2>All Customers ({data.customers.length})</h2>
+                {data.customers.length > 0 ? (
+                  <div className="grid-2">
+                    {data.customers.map(customer => (
+                      <div key={customer.id} className="customer-item">
+                        <h3>{customer.name}</h3>
+                        <p>📞 {customer.phone}</p>
+                        <p>📍 {customer.address}</p>
+                        <p>📧 {customer.email}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: '#999', textAlign: 'center', padding: '2rem' }}>No customers yet. Add one above!</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return <div className="loading">Loading...</div>;
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<BardonSaaS />);
+  </script>
+</body>
+</html>
